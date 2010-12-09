@@ -1,4 +1,6 @@
+// marcin.olak@gmail.com
 #include <iostream>
+#include <string>
 #include <cstring>
 
 using namespace std;
@@ -6,174 +8,123 @@ using namespace std;
 #define VISITED(l) visited[(l).level][(l).pos]
 #define VISIT(l) VISITED(l)=true
 #define UNVISIT(l) VISITED(l)=false
-#define LETTER(l) (((l).level == 0) ? (J[(l).pos]) : (B[(l).pos]))
-
-char text[16];
-int pos=0;
-string result="";
-int level=0;
+#define CHILDREN_LEFT g[left.level][left.pos][l]
+#define CHILDREN_RIGHT g[right.level][right.pos][r]
+#define LETTER(x) (x).letter(*this)
 
 class TheBoringStoreDivTwo {
-public:
-    struct iterator {
-        int pos, level, max0, max1;
-        bool first;
-        iterator() {}
-        iterator(int pos, int level, const string& J, const string& B) : pos(pos), level(level), first(true), max0(J.length()), max1(B.length()) {}
-        static iterator end() {
-            return iterator(-1, -1, "", "");
+    struct node {
+        node() : level(-1), pos(-1) {}
+        node(char level, char pos) : level(level), pos(pos) {}
+        char letter(TheBoringStoreDivTwo& store) const {
+            return (level == 0) ? store.J[pos] : store.B[pos];
         }
-        iterator(const iterator& i) : pos(i.pos), level(i.level), first(true), max0(i.max0), max1(i.max1) {}
-        iterator& operator++() {
-           if (level==-1) {
-               *this=end();
-           } else if (first) {
-               pos++;
-               first = false;
-           } else if (level == 0) {
-               pos=0;
-               level=1;
-           } else {
-               pos++;
-           }
-           if (level==0 && pos==max0) {
-               pos=0;
-               level=1;
-           }
-           if (level==1 && pos==max1) {
-               *this=end();
-           }
-           return *this;
+        static node end() {
+            return node();
         }
-        bool operator!=(const iterator& i) {
-            return pos != i.pos || level != i.level;
+        bool operator!=(const node& n) {
+            return n.level != level || n.pos != pos;
         }
-        friend ostream& operator<<(ostream& os, iterator& it) {
-            return os << it.pos << "@" << it.level	;
-        }
+        int level;
+        int pos;
     };
-    static iterator stackleft[16];
-    static iterator stackright[16];
-
-    void visit(iterator& left, iterator& right) {
-        level++;
-        for (iterator l=left; l != iterator::end(); ++l) {
-            if (VISITED(l))
-                continue;
-            VISIT(l);
-            text[pos++]=LETTER(l);
-            text[pos]=0;
-            stackleft[pos++]=l;
-            stackleft[pos]=iterator::end();
-            stackright[pos]=iterator::end();
-            for (iterator r=right; r != iterator::end(); ++r) {
-                if (pos==1 && (r.level==1 || l.level==1))
-                    continue;
-                cout << l << " | " << r << " | " << text << " ";
-                for (int i=0;i<level;i++) cout << " ";
-                if (LETTER(l) != LETTER(r)) {
-                    cout << "LETTER " << LETTER(l) << " vs " << LETTER(r) << endl;
-                } else if (VISITED(r)) {
-                    cout << "VISITED" << endl;
-                } else {
-                cout << "V I S I T" << endl;
-               stackright[pos-1]=r;
-                if (l.level == r.level && l.level == 1) {	
-                    if (pos > result.length())
-                        result = text;
-                    else if (pos == result.length())
-                        result = (text < result ) ? text : result;
-                    cout << result << " xx " << J << " xx " << B << endl;
-                    for(int i=0; i<pos;i++) {
-                        cout << stackleft[i] << ", ";
-                    }
-                    cout << endl;
-                    for(int i=0; i<pos;i++) {
-                        cout << stackright[i] << ", ";
-                    }
-                    cout << endl;
-                }
-                VISIT(r);
-                visit(l, r);
-                UNVISIT(r);
-                for (int i=0;i<level;i++) cout << " ";
-                cout << l << " | " << r << " | " << text << "UNVISIT" << endl;
-                }
-            }
-            cout << text << " MINUS ";
-            text[--pos]=0;
-            stackleft[pos]=iterator::end();
-	    stackright[pos]=iterator::end();
-            cout << text << endl;
-            UNVISIT(l);
-         }
-        level--;
-    }
-
-   string find(string a, string b) {
-        J=a;
-        B=b;
-        bzero(visited, sizeof(visited));
-        pos=0;
-        text[0]=0;
-        result="";
-        for (int i=0; i<J.length(); ++i) {
-            for (int j=0; j<J.length(); ++j) {
-                iterator left=iterator(i, 0, J, B);
-                iterator right=iterator(j, 0, J, B);
-                visit(left, right);
-            }
-        }    
-        return result;
-    }
-
-private:
-    bool visited[2][15];
-    string J;
-    string B;
-};
-
-TheBoringStoreDivTwo::iterator TheBoringStoreDivTwo::stackleft[16]={TheBoringStoreDivTwo::iterator::end()};
-TheBoringStoreDivTwo::iterator TheBoringStoreDivTwo::stackright[16]={TheBoringStoreDivTwo::iterator::end()};
-
-int main(void) {
-    TheBoringStoreDivTwo store;
-//    cout << store.find("StoreOfJohn", "StoreOfBrus") << endl;
-  //  cout << store.find("JohnAndJohn", "John") << endl;
-    cout << store.find("JohnPlaysGames", "BrusAlsoPlays") << endl;
-//    cout << store.find("abacaba", "abacabadabacaba") << endl;
-    return 0;
-}
-/*
+public:
     string find(string a, string b) {
         J=a;
         B=b;
-        bzero(visited, sizeof(visited));
-        for (int i=0; i<J.length()-1; ++i) {
-            for (int j=i+1; j<J.length(); ++j) {
-                if (J[i] != J[j])
-                    continue;
-                iterator left=iterator(i, 0, J, B);
-                iterator right=iterator(j, 0, J, B);
-                visit(left, right);
+        buildGraph();
+        memset(visited, 0, sizeof(visited));
+        text[0]=0;
+        text_len=0;
+        result="";
+
+        for (int i=0; i<J.length(); i++) {
+            for (int j=0; j<J.length(); j++) {
+                node left(0, i);
+                node right(0, j);
+                if (i!=j && LETTER(left) == LETTER(right)) {
+                    visit(left, right);
+                }
             }
-        }    
+        }
         return result;
     }
 
 private:
-    bool visited[2][15];
     string J;
     string B;
+    node g[2][15][17];
+    bool visited[2][15];
+    string result;
+    char text[17];
+    int text_len;
+    
+
+    void visit(const node& left, const node& right) {
+        VISIT(left);
+        VISIT(right);
+        text[text_len++]=LETTER(left);
+        text[text_len]=0;
+        if (left.level==right.level && left.level==1) {
+            if (text_len > result.length()) {
+                result=text;
+            } else if (text_len == result.length()) {
+                result=(result < text) ? result : text;
+            }
+        }
+        for (int r=0; CHILDREN_RIGHT != node::end(); r++) {
+            if (VISITED(CHILDREN_RIGHT)) {
+                continue;
+            }
+            for (int l=0; CHILDREN_LEFT != node::end(); l++) {
+            	if (!(CHILDREN_LEFT != CHILDREN_RIGHT)) {
+            		continue;
+            	}
+                if (LETTER(CHILDREN_LEFT) != LETTER(CHILDREN_RIGHT) || VISITED(CHILDREN_LEFT)) {
+                    continue;
+                }               
+                visit(CHILDREN_LEFT, CHILDREN_RIGHT);
+            }
+        }
+        text[--text_len]=0;
+        UNVISIT(left);
+        UNVISIT(right);
+    }
+
+    void buildGraph() {       
+        for (int i=0; i<2; i++)
+        for (int j=0; j<15; j++)
+        for (int k=0; k<17; k++)
+            g[i][j][k]=node::end();
+        
+        for (int j=0; j<J.length()-1; j++) {
+            g[0][j][0].level=0;
+            g[0][j][0].pos=j+1;
+        }        
+        for (int b=0; b<B.length(); b++) {
+            for (int j=0; j<J.length(); j++) {
+                int p=(j < J.length()-1) ? b+1 : b;
+                g[0][j][p].level=1;
+                g[0][j][p].pos=b;
+            }
+            if (b<B.length()-1) {
+                g[1][b][0].level=1;
+                g[1][b][0].pos=b+1;
+            }
+        }
+    }
+    friend class node;
 };
 
 int main(void) {
     TheBoringStoreDivTwo store;
-//    cout << store.find("StoreOfJohn", "StoreOfBrus") << endl;
-  //  cout << store.find("JohnAndJohn", "John") << endl;
+    cout << store.find("StoreOfJohn", "StoreOfBrus") << endl;
+    cout << store.find("JohnAndJohn", "John") << endl;
     cout << store.find("JohnPlaysGames", "BrusAlsoPlays") << endl;
-    //for (TheBoringStoreDivTwo::iterator i(0,0); TheBoringStoreDivTwo::iterator::end()!=i; ++i) {
-     //  cout << i << endl;
-    //}
+    cout << store.find("aba", "abcab") << endl;
+    cout << store.find("abcab", "abcdabc") << endl;
+    cout << store.find("abacaba", "abacabadabacaba") << endl;
+    cout << store.find("eeWW", "gg") << endl;
     return 0;
-}*/
+}
+
