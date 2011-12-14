@@ -8,7 +8,6 @@ using namespace std;
 #define REP(x, n) for (int x = 0; x < (n); ++x)
 
 bool E[26][26];
-bool IE[26][26];
 int V[26];
 int d[26];
 int res[26];
@@ -27,18 +26,18 @@ void dfsTopo(int u, int& order) {
             }
         }
     }
-    isubst[25-order] = u;    
+    isubst[25-order] = u;
     subst[u] = 25 - order;
     order++;
 }
 
 int dfsCount(bool e[26][26], int u) {
-    V[u] = 0;    
+    V[u] = 1;
     REP(v, 26) {
         if (e[u][v]) {
             if (!V[v]) {
                 d[v]++;                
-                V[u] += 1 + dfsCount(e, v);
+                V[u] += dfsCount(e, v);
             }
         }
     }
@@ -51,21 +50,20 @@ int main(void) {
     while (n--) {
         int k;
         cin >> a >> k;
-        
+
         char buf[2][2000000];
         char * curr = &buf[0][0];
         char * prev = &buf[1][0];
         prev[0] = 0;
         int prev_l = 0;
-        
+
         cin.getline(curr, 2000000);
         memset(E, 0, sizeof(E));
-        memset(IE, 0, sizeof(IE));
         memset(V, 0, sizeof(V));
         memset(d, 0, sizeof(d));
         memset(ok, 0, sizeof(ok));
         memset(res, 0, sizeof(res));
-        
+
         REP(i, 26) {
             subst[i] = i;
             isubst[i] = i;
@@ -82,16 +80,15 @@ int main(void) {
             int c = 0;
             while (curr[c] && curr[c] == prev[c]) {
                 c++;
-            }            
-            if (prev[c] && curr[c] && prev[c] >= 'a' && curr[c] >= 'a' && prev[c] <= 'z' && curr[c] <= 'z') {                
+            }
+            if (prev[c] && curr[c] && prev[c] >= 'a' && curr[c] >= 'a' && prev[c] <= 'z' && curr[c] <= 'z') {
                 int u = prev[c] - 'a';
                 int v = curr[c] - 'a';
                 E[u][v] = true;
-                IE[v][u] = true;
             }
             prev = curr;
         }
-        
+
         int order = 0;
         REP(v, 26) {
             if (!V[v]) {
@@ -102,12 +99,11 @@ int main(void) {
         bool stop = false;
         REP(v, 26) {
             memset(V, 0, sizeof(V));
-            res[v] = 25 - dfsCount(E, isubst[v]);            
+            res[v] = 26 - dfsCount(E, isubst[v]);
         }
         int Z = 26;
         REP(v, 26) {
-            ok[v] = (res[v] == v && d[isubst[v]] == v); 
-            //cout << char('a' + v) << " " << res[v] << " " << d[isubst[v]] << " " << ((ok[v]) ? "+" : "") << endl;            
+            ok[v] = (res[v] == v && d[isubst[v]] == v);
         }
         cin.getline(curr, 2000000);
 
