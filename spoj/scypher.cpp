@@ -1,5 +1,5 @@
 // http://www.spoj.pl/problems/SCYPHER/
-#include <iostream>
+#include <cstdio>
 #include <cstring>
 
 using namespace std;
@@ -8,13 +8,13 @@ using namespace std;
 #define REP(x, n) for (int x = 0; x < (n); ++x)
 
 bool E[26][26];
-int V[26];
-int d[26];
-int res[26];
+char V[26];
+char d[26];
+char res[26];
 bool ok[26];
-int subst[26];
-int isubst[26];
-int topo[26];
+char subst[26];
+char isubst[26];
+char topo[26];
 int a;
 
 void dfsTopo(int u, int& order) {
@@ -33,10 +33,10 @@ void dfsTopo(int u, int& order) {
 
 int dfsCount(bool e[26][26], int u) {
     V[u] = 1;
-    REP(v, 26) {
+    REP(v, a) {
         if (e[u][v]) {
             if (!V[v]) {
-                d[v]++;                
+                d[v]++;
                 V[u] += dfsCount(e, v);
             }
         }
@@ -46,27 +46,28 @@ int dfsCount(bool e[26][26], int u) {
 
 int main(void) {
     int n;
-    cin >> n;
+    scanf("%d", &n);
     while (n--) {
         int k;
-        cin >> a >> k;
+        scanf("%d %d", &a, &k);
 
-        char buf[2][2000000];
+        char buf[2][100000];
         char * curr = &buf[0][0];
         char * prev = &buf[1][0];
         prev[0] = 0;
         int prev_l = 0;
 
-        cin.getline(curr, 2000000);
+        gets(curr);
+
         memset(E, 0, sizeof(E));
         memset(V, 0, sizeof(V));
-        memset(d, 0, sizeof(d));
-        memset(ok, 0, sizeof(ok));
-        memset(res, 0, sizeof(res));
 
         REP(i, 26) {
             subst[i] = i;
             isubst[i] = i;
+            res[i] = 0;
+            ok[i] = 0;
+            d[i] = 0;
             if (i >= a && i < 25) {
                 E[i][i+1] = true;
             } else if (i < a && a < 26) {
@@ -76,7 +77,7 @@ int main(void) {
 
         REP(i, k) {
             curr = buf[i % 2];
-            cin.getline(curr, 2000000);
+            gets(curr);
             int c = 0;
             while (curr[c] && curr[c] == prev[c]) {
                 c++;
@@ -90,28 +91,30 @@ int main(void) {
         }
 
         int order = 0;
-        REP(v, 26) {
+        REP(v, a) {
             if (!V[v]) {
                 dfsTopo(v, order);
             }
         }
-        int A = 0;
-        bool stop = false;
-        REP(v, 26) {
+        REP(v, a) {
             memset(V, 0, sizeof(V));
-            res[v] = 26 - dfsCount(E, isubst[v]);
+            res[v] = a - dfsCount(E, isubst[v]);
         }
-        int Z = 26;
         REP(v, 26) {
-            ok[v] = (res[v] == v && d[isubst[v]] == v);
+            if (v >= a) {
+                ok[v] = true;
+            } else {
+                ok[v] = (res[v] == v && d[isubst[v]] == v);
+            }
         }
-        cin.getline(curr, 2000000);
+        gets(curr);
 
         bool hopeless = false;
         int i = 0;
-        while (curr[i]) {
-            if (curr[i] >= 'a' && curr[i] <= 'z') {
-                int enc = curr[i] - 'a';
+        char c;
+        while ((c = curr[i]) && !hopeless) {
+            if (c >= 'a' && c <= 'z') {
+                int enc = c - 'a';
                 int dec = subst[enc];
                 if (ok[dec]) {
                     curr[i] = 'a' + dec;
@@ -122,11 +125,10 @@ int main(void) {
             i++;
         }
         if (hopeless) {
-            cout << "Message cannot be decrypted.";
+            printf("Message cannot be decrypted.\n");
         } else {
-            cout << curr;
+            printf("%s\n", curr);
         }
-        cout << endl;
     }
     return 0;
 }
